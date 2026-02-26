@@ -1,0 +1,15 @@
+{
+  "name": "Painel Sentinela",
+  "short_name": "Sentinela",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#ff69b4",
+  "icons": [
+    {
+      "src": "icone.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

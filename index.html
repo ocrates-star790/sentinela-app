@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Sentinela</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 20px; }
+        .card { background: #2d2d2d; border-radius: 15px; padding: 20px; margin-bottom: 20px; border-bottom: 4px solid #ff69b4; }
+        .status { color: #00ff00; font-weight: bold; margin-bottom: 10px; }
+        button { background: #ff69b4; border: none; color: white; padding: 15px 30px; border-radius: 10px; font-size: 18px; width: 100%; margin: 10px 0; cursor: pointer; }
+        input { width: 90%; padding: 15px; border-radius: 10px; border: none; margin: 10px 0; font-size: 16px; }
+        h1 { color: #ff69b4; }
+    </style>
+</head>
+<body>
+    <h1>Sentinela Socrático</h1>
+    
+    <div class="card">
+        <div class="status">● Robô Online</div>
+        <p>Modelo: ESP32-S3 N16R8</p>
+    </div>
+
+    <div class="card">
+        <h3>O que eu devo dizer hoje?</h3>
+        <input type="text" id="frase" placeholder="Ex: Promoção de Café!">
+        <button onclick="enviarComando()">Atualizar Robô</button>
+    </div>
+
+    <div class="card">
+        <h3>Trocar Modo</h3>
+        <button onclick="mudarModo('filosofo')" style="background: #4a4a4a;">Modo Filósofo</button>
+        <button onclick="mudarModo('vendedor')" style="background: #4a4a4a;">Modo Vendedor</button>
+    </div>
+
+    <script>
+        function enviarComando() {
+            const frase = document.getElementById('frase').value;
+            alert('Enviando para o Webhook: ' + frase);
+            // Aqui entra o link do seu Make (Integromat)
+        }
+    </script>
+</body>
+</html>
