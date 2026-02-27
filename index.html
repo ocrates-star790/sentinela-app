@@ -3,102 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Johan Control</title>
-    <link rel="manifest" href="manifest.json">
+    <title>Painel Johan</title>
     <style>
-        /* Estética "Johan": Fria, minimalista e clínica */
-        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; text-align: center; padding: 20px; }
-        .card { background: #141414; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        /* Paleta solicitada: Branco e Cinza */
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; color: #333; text-align: center; padding: 20px; }
+        .card { background: #ffffff; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         
-        /* Status solicitado: Verde quando online, Cinza quando offline */
-        .status { font-weight: bold; margin-bottom: 10px; transition: 0.3s; }
-        .online { color: #00ff00; }
-        .offline { color: #7a7a7a; }
-        .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .dot-online { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
-        .dot-offline { background-color: #7a7a7a; }
+        /* Status: Apenas a bolinha colorida e o texto cinza solicitado */
+        .status-area { display: flex; align-items: center; justify-content: center; gap: 8px; color: #666; font-size: 14px; font-weight: 500; }
+        .dot { height: 12px; width: 12px; border-radius: 50%; transition: 0.3s; }
+        .dot-online { background-color: #28a745; box-shadow: 0 0 5px #28a745; }
+        .dot-offline { background-color: #ccc; }
 
-        /* Botões e Inputs: Melhoramos a leitura */
-        h1 { font-weight: 200; letter-spacing: 8px; color: #fff; margin-bottom: 30px; }
-        input { width: 90%; padding: 15px; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; margin: 10px 0; font-size: 16px; }
-        button { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 4px; font-size: 14px; width: 100%; margin: 8px 0; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
-        button:active { background: #333; }
-        .btn-main { border-color: #444; font-weight: bold; background: #222; }
-
-        /* Cartão de Teste de Assinatura */
-        .sub-card { border-top: 2px solid #8b0000; }
-        .price { font-size: 24px; color: #fff; margin: 10px 0; }
+        /* Estilo dos Botões e Inputs */
+        h1 { font-weight: 300; letter-spacing: 2px; color: #222; margin-bottom: 30px; }
+        input { width: 90%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; font-size: 16px; background: #fafafa; }
+        button { background: #eee; border: 1px solid #ddd; color: #555; padding: 12px; border-radius: 8px; font-size: 14px; width: 100%; margin: 5px 0; cursor: pointer; transition: 0.2s; }
+        
+        /* Botão Ativo/Selecionado */
+        .active-mode { background: #333 !important; color: #fff !important; border-color: #333 !important; font-weight: bold; }
+        
+        .btn-send { background: #222; color: #fff; border: none; font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
     <h1>JOHAN</h1>
     
     <div class="card">
-        <div id="status-container" class="status online">
+        <div class="status-area">
             <span id="status-dot" class="dot dot-online"></span>
-            <span id="status-text">ROBÔ ONLINE</span>
+            PAINEL DO ROBÔ
         </div>
-        <p style="font-size: 12px; color: #666;">MODELO: ESP32-S3 N16R8</p>
     </div>
 
     <div class="card">
-        <h3>COMANDO DE EXECUÇÃO</h3>
-        <input type="text" id="frase" placeholder="Qual verdade ele deve sussurrar?">
-        <button class="btn-main" onclick="enviarComando()">Despertar o Monstro</button>
+        <h3>COMANDO DE VOZ</h3>
+        <input type="text" id="frase" placeholder="O que ele deve dizer?">
+        <button class="btn-send" onclick="enviarComando()">ENVIAR COMANDO</button>
     </div>
 
     <div class="card">
-        <h3>PERSONALIDADE</h3>
+        <h3>MODO DE OPERAÇÃO</h3>
         <div style="display: flex; gap: 10px;">
-            <button onclick="mudarModo('filosofo')">Filósofo</button>
-            <button onclick="mudarModo('vendedor')">Vendedor</button>
+            <button id="btn-filosofo" onclick="selecionarModo('filosofo')">MODO FILÓSOFO</button>
+            <button id="btn-vendedor" onclick="selecionarModo('vendedor')">MODO VENDEDOR</button>
         </div>
-    </div>
-
-    <div class="card sub-card">
-        <h3>PLANO EXPERIMENTAL</h3>
-        <div class="price">R$ 1,00 <span style="font-size: 12px; color: #666;">/mês</span></div>
-        <input type="text" placeholder="0000 0000 0000 0000" maxlength="16">
-        <div style="display: flex; gap: 10px;">
-            <input type="text" placeholder="MM/AA" style="width: 40%;">
-            <input type="text" placeholder="CVC" style="width: 40%;">
-        </div>
-        <button onclick="testarPagamento()" style="background: #8b0000; border: none;">Assinar Agora</button>
     </div>
 
     <script>
         const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
+        // Ao carregar a página, verifica qual modo estava salvo
+        window.onload = function() {
+            const modoSalvo = localStorage.getItem('modoSelecionado') || 'filosofo';
+            selecionarModo(modoSalvo);
+        };
+
+        function selecionarModo(modo) {
+            // Salva a escolha no navegador
+            localStorage.setItem('modoSelecionado', modo);
+            
+            // Reseta visual dos botões
+            document.getElementById('btn-filosofo').classList.remove('active-mode');
+            document.getElementById('btn-vendedor').classList.remove('active-mode');
+            
+            // Ativa o botão correto
+            document.getElementById('btn-' + modo).classList.add('active-mode');
+        }
+
         async function enviarComando() {
             const frase = document.getElementById('frase').value;
-            const statusText = document.getElementById('status-text');
-            const statusDot = document.getElementById('status-dot');
-            const container = document.getElementById('status-container');
+            const dot = document.getElementById('status-dot');
+            const modoAtual = localStorage.getItem('modoSelecionado');
 
             try {
                 const response = await fetch(webhookURL, {
                     method: 'POST',
-                    body: JSON.stringify({ mensagem: frase }),
+                    body: JSON.stringify({ mensagem: frase, modo: modoAtual }),
                     headers: { 'Content-Type': 'application/json' }
                 });
 
                 if (response.ok) {
-                    alert("Johan recebeu sua mensagem.");
+                    dot.className = "dot dot-online";
+                    alert("Enviado com sucesso.");
                 } else {
                     throw new Error();
                 }
             } catch (err) {
-                // Se o sinal cair ou der erro, fica cinza
-                container.className = "status offline";
-                statusDot.className = "dot dot-offline";
-                statusText.innerText = "SINAL PERDIDO";
+                // Se o sinal cair, a bolinha fica cinza
+                dot.className = "dot dot-offline";
+                alert("Falha na conexão com o robô.");
             }
-        }
-
-        function testarPagamento() {
-            alert("Teste de checkout: R$ 1,00 processado no ambiente de sandbox.");
         }
     </script>
 </body>
 </html>
-
