@@ -5,17 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Sentinela</title>
     <link rel="manifest" href="manifest.json">
-    <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 20px; }
-        .card { background: #2d2d2d; border-radius: 15px; padding: 20px; margin-bottom: 20px; border-bottom: 4px solid #ff69b4; }
-        .status { color: #00ff00; font-weight: bold; margin-bottom: 10px; }
-        button { background: #ff69b4; border: none; color: white; padding: 15px 30px; border-radius: 10px; font-size: 18px; width: 100%; margin: 10px 0; cursor: pointer; }
-        input { width: 90%; padding: 15px; border-radius: 10px; border: none; margin: 10px 0; font-size: 16px; }
-        h1 { color: #ff69b4; }
-    </style>
+  <style>
+    body { font-family: 'Garamond', serif; background: #0d0d0d; color: #d1d1d1; text-align: center; padding: 20px; }
+    /* Card com borda fria, estilo clínico */
+    .card { background: #1a1a1a; border-radius: 5px; padding: 25px; margin-bottom: 25px; border-left: 5px solid #4a4a4a; transition: 0.3s; }
+    .status { color: #7a7a7a; font-size: 0.9em; letter-spacing: 2px; margin-bottom: 15px; }
+    /* Botão minimalista */
+    button { background: transparent; border: 1px solid #4a4a4a; color: #d1d1d1; padding: 12px; border-radius: 0; font-size: 16px; width: 100%; margin: 10px 0; cursor: pointer; text-transform: uppercase; }
+    button:hover { background: #1a1a1a; border-color: #8b0000; color: #8b0000; }
+    input { width: 92%; padding: 12px; background: #000; border: 1px solid #333; color: #8b0000; margin: 10px 0; font-size: 16px; outline: none; }
+    h1 { font-weight: 300; letter-spacing: 5px; color: #f2f2f2; margin-bottom: 40px; }
+</style>
 </head>
 <body>
-    <h1>Sentinela Socrático</h1>
+    <h1>JOHAN</h1>
     
     <div class="card">
         <div class="status">● Robô Online</div>
@@ -24,8 +27,8 @@
 
     <div class="card">
         <h3>O que eu devo dizer hoje?</h3>
-        <input type="text" id="frase" placeholder="Ex: Promoção de Café!">
-        <button onclick="enviarComando()">Atualizar Robô</button>
+        <input type="text" id="frase" placeholder="Qual verdade devo sussurrar?!">
+        <button onclick="enviarComando()">Despertar o Monstro</button>
     </div>
 
     <div class="card">
@@ -34,12 +37,29 @@
         <button onclick="mudarModo('vendedor')" style="background: #4a4a4a;">Modo Vendedor</button>
     </div>
 
-    <script>
-        function enviarComando() {
-            const frase = document.getElementById('frase').value;
-            alert('Enviando para o Webhook: ' + frase);
-            // Aqui entra o link do seu Make (Integromat)
+   <script>
+    async function enviarComando() {
+        const fraseInput = document.getElementById('frase').value;
+        const statusDiv = document.querySelector('.status');
+        
+        // 
+        const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
+
+        try {
+            statusDiv.innerText = "● Enviando...";
+            const response = await fetch(webhookURL, {
+                method: 'POST',
+                body: JSON.stringify({ mensagem: fraseInput, modo: "vendedor" }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                statusDiv.innerText = "● Atualizado!";
+                setTimeout(() => { statusDiv.innerText = "● Robô Online"; }, 3000);
+            }
+        } catch (error) {
+            statusDiv.innerText = "● Erro na Conexão";
+            console.error(error);
         }
-    </script>
-</body>
-</html>
+    }
+</script>
