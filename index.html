@@ -17,19 +17,16 @@
         h1 { font-weight: 200; letter-spacing: 10px; color: #fff; margin-bottom: 30px; }
         input, select { width: 90%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 2px; margin: 8px 0; font-size: 15px; }
         
-        /* Botões */
-        button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; border-radius: 2px; font-size: 13px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        /* Botões com efeito de clique */
+        button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; border-radius: 2px; font-size: 13px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.1s; }
+        button:active { transform: scale(0.98); background: #252525; opacity: 0.8; } /* Feedback de clique */
+        
         .active-mode { background: #e0e0e0 !important; color: #000 !important; font-weight: bold; border-color: #fff !important; }
         .btn-send { background: #8b0000; color: #fff; border: none; font-weight: bold; margin-top: 10px; letter-spacing: 2px; }
 
-        /* Alerta de Pagamento (Inteligente) */
         .pay-alert { background: #8b0000; color: #fff; padding: 10px; font-size: 11px; font-weight: bold; margin-bottom: 20px; display: none; }
-
-        /* Abas de Pagamento */
         .payment-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
         .pay-method { font-size: 10px; padding: 10px 5px; flex: 1; border: 1px solid #333; }
-        
-        /* Toggle Crédito/Débito */
         .card-type-selector { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; font-size: 12px; color: #fff; }
     </style>
 </head>
@@ -83,12 +80,12 @@
         
         <div id="sec-boleto" style="display:none; padding: 10px;">
             <p style="font-size:12px;">Boleto gerado para o próximo vencimento.</p>
-            <button style="background:#333; color:#fff;">Baixar PDF</button>
+            <button onclick="baixarBoleto()" style="background:#333; color:#fff;">Baixar PDF</button>
         </div>
 
         <div id="sec-pix" style="display:none; padding: 10px;">
-            <code style="color:#00ff00; font-size:10px; word-break:break-all;">00020126360014BR.GOV.BCB.PIX...</code>
-            <button style="margin-top:10px; font-size:10px;">Copiar Código PIX</button>
+            <code id="pix-code" style="color:#00ff00; font-size:10px; word-break:break-all;">00020126360014BR.GOV.BCB.PIX0114+55119999999995204000053039865802BR5925JOHAN_ROBOT6009SAO_PAULO62070503***6304ABCD</code>
+            <button onclick="copiarPix()" style="margin-top:10px; font-size:10px;">Copiar Código PIX</button>
         </div>
 
         <button onclick="confirmarPagamento()" style="background:#fff; color:#000; border:none; margin-top:15px; font-weight:bold;">EFETUAR PAGAMENTO</button>
@@ -98,15 +95,11 @@
         const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
         window.onload = function() {
-            // Persistência de Personalidade
             const modoSalvo = localStorage.getItem('modoSelecionado') || 'filosofo';
             selecionarModo(modoSalvo);
-            
-            // Persistência de Aba de Pagamento
             const abaSalva = localStorage.getItem('abaPagamento') || 'cartao';
             setPayTab(abaSalva);
 
-            // Lógica de Alerta: Aparece apenas após o dia 25 do mês
             const hoje = new Date();
             if (hoje.getDate() >= 25) {
                 document.getElementById('alert-pagamento').style.display = 'block';
@@ -122,14 +115,10 @@
 
         function setPayTab(metodo) {
             localStorage.setItem('abaPagamento', metodo);
-            
-            // Reset de visual das abas
             ['cartao', 'boleto', 'pix'].forEach(m => {
                 document.getElementById('tab-' + m).classList.remove('active-mode');
                 document.getElementById('sec-' + m).style.display = 'none';
             });
-
-            // Ativa a selecionada
             document.getElementById('tab-' + metodo).classList.add('active-mode');
             document.getElementById('sec-' + metodo).style.display = 'block';
         }
@@ -145,8 +134,31 @@
                     body: JSON.stringify({ mensagem: frase, modo: modo }),
                     headers: { 'Content-Type': 'application/json' }
                 });
-                if (response.ok) { dot.className = "dot dot-online"; }
-            } catch (err) { dot.className = "dot dot-offline"; }
+                if (response.ok) { 
+                    dot.className = "dot dot-online";
+                    alert("Johan recebeu sua mensagem."); // Mensagem de volta
+                }
+            } catch (err) { 
+                dot.className = "dot dot-offline";
+                alert("Falha na conexão.");
+            }
+        }
+
+        function copiarPix() {
+            const textoPix = document.getElementById('pix-code').innerText;
+            navigator.clipboard.writeText(textoPix).then(() => {
+                alert("Código PIX copiado!");
+            });
+        }
+
+        function baixarBoleto() {
+            alert("Preparando download do PDF... (Em produção, o arquivo será baixado aqui)");
+            // Simulação de download
+            const blob = new Blob(["Boleto Placeholder"], { type: "application/pdf" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "boleto_johan.pdf";
+            link.click();
         }
 
         function confirmarPagamento() {
