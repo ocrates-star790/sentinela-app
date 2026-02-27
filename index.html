@@ -3,31 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Johan</title>
+    <title>Johan Control</title>
     <style>
-        /* Paleta solicitada: Branco e Cinza */
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; color: #333; text-align: center; padding: 20px; }
-        .card { background: #ffffff; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        /* Estética Johan: Fundo preto profundo e cinza gélido */
+        body { font-family: 'Segoe UI', sans-serif; background: #050505; color: #b0b0b0; text-align: center; padding: 20px; }
+        .card { background: #111; border-radius: 4px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
         
-        /* Status: Apenas a bolinha colorida e o texto cinza solicitado */
-        .status-area { display: flex; align-items: center; justify-content: center; gap: 8px; color: #666; font-size: 14px; font-weight: 500; }
-        .dot { height: 12px; width: 12px; border-radius: 50%; transition: 0.3s; }
-        .dot-online { background-color: #28a745; box-shadow: 0 0 5px #28a745; }
-        .dot-offline { background-color: #ccc; }
+        /* Status solicitado: Bolinha verde e texto cinza claro */
+        .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 13px; letter-spacing: 1px; }
+        .dot { height: 10px; width: 10px; border-radius: 50%; transition: 0.3s; }
+        .dot-online { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
+        .dot-offline { background-color: #444; }
 
-        /* Estilo dos Botões e Inputs */
-        h1 { font-weight: 300; letter-spacing: 2px; color: #222; margin-bottom: 30px; }
-        input { width: 90%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; font-size: 16px; background: #fafafa; }
-        button { background: #eee; border: 1px solid #ddd; color: #555; padding: 12px; border-radius: 8px; font-size: 14px; width: 100%; margin: 5px 0; cursor: pointer; transition: 0.2s; }
+        h1 { font-weight: 200; letter-spacing: 10px; color: #fff; margin-bottom: 40px; }
+        input, select { width: 90%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 2px; margin: 8px 0; font-size: 15px; }
         
-        /* Botão Ativo/Selecionado */
-        .active-mode { background: #333 !important; color: #fff !important; border-color: #333 !important; font-weight: bold; }
-        
-        .btn-send { background: #222; color: #fff; border: none; font-weight: bold; margin-top: 15px; }
+        /* Botões de Comando */
+        button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; border-radius: 2px; font-size: 13px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .active-mode { background: #e0e0e0 !important; color: #000 !important; font-weight: bold; border-color: #fff !important; }
+        .btn-send { background: #8b0000; color: #fff; border: none; font-weight: bold; margin-top: 10px; letter-spacing: 2px; }
+
+        /* Módulo de Pagamento e Alerta */
+        .pay-alert { background: #8b0000; color: #fff; padding: 10px; font-size: 12px; font-weight: bold; margin-bottom: 20px; border-radius: 2px; display: none; }
+        .payment-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .pay-method { font-size: 11px; padding: 8px; flex: 1; border: 1px solid #333; }
     </style>
 </head>
 <body>
     <h1>JOHAN</h1>
+
+    <div id="alert-pagamento" class="pay-alert">
+        AVISO: MÊS ENCERRADO. EFETUE O PAGAMENTO PARA MANTER O JOHAN ATIVO.
+    </div>
     
     <div class="card">
         <div class="status-area">
@@ -39,61 +46,90 @@
     <div class="card">
         <h3>COMANDO DE VOZ</h3>
         <input type="text" id="frase" placeholder="O que ele deve dizer?">
-        <button class="btn-send" onclick="enviarComando()">ENVIAR COMANDO</button>
+        <button class="btn-send" onclick="enviarComando()">Despertar o Monstro</button>
     </div>
 
     <div class="card">
-        <h3>MODO DE OPERAÇÃO</h3>
+        <h3>PERSONALIDADE</h3>
         <div style="display: flex; gap: 10px;">
-            <button id="btn-filosofo" onclick="selecionarModo('filosofo')">MODO FILÓSOFO</button>
-            <button id="btn-vendedor" onclick="selecionarModo('vendedor')">MODO VENDEDOR</button>
+            <button id="btn-filosofo" onclick="selecionarModo('filosofo')">Filósofo</button>
+            <button id="btn-vendedor" onclick="selecionarModo('vendedor')">Vendedor</button>
         </div>
+    </div>
+
+    <div class="card" style="border-top: 2px solid #444;">
+        <h3>GESTÃO DE ASSINATURA</h3>
+        <div class="payment-tabs">
+            <button class="pay-method" id="pay-cred" onclick="setPay('cred')">Crédito</button>
+            <button class="pay-method" id="pay-deb" onclick="setPay('deb')">Débito</button>
+            <button class="pay-method" id="pay-pix" onclick="setPay('pix')">PIX</button>
+        </div>
+
+        <div id="campos-cartao">
+            <input type="text" placeholder="0000 0000 0000 0000">
+            <div style="display: flex; gap: 5px;">
+                <input type="text" placeholder="MM/AA" style="width: 45%;">
+                <input type="text" placeholder="CVC" style="width: 45%;">
+            </div>
+        </div>
+        
+        <div id="campo-pix" style="display:none; padding: 10px; font-size: 12px;">
+            <p>Copie a chave PIX abaixo:</p>
+            <code style="color:#00ff00;">00020126360014BR.GOV.BCB.PIX...</code>
+        </div>
+
+        <button onclick="confirmarPagamento()" style="background:#fff; color:#000; border:none; margin-top:15px;">Efetuar Pagamento</button>
     </div>
 
     <script>
         const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
-        // Ao carregar a página, verifica qual modo estava salvo
+        // Carregar preferências e simular fechamento de mês
         window.onload = function() {
             const modoSalvo = localStorage.getItem('modoSelecionado') || 'filosofo';
             selecionarModo(modoSalvo);
+            
+            // Simulação: se for dia 27 (hoje), mostra o alerta de pagamento
+            const hoje = new Date();
+            if (hoje.getDate() >= 27) {
+                document.getElementById('alert-pagamento').style.display = 'block';
+            }
         };
 
         function selecionarModo(modo) {
-            // Salva a escolha no navegador
             localStorage.setItem('modoSelecionado', modo);
-            
-            // Reseta visual dos botões
             document.getElementById('btn-filosofo').classList.remove('active-mode');
             document.getElementById('btn-vendedor').classList.remove('active-mode');
-            
-            // Ativa o botão correto
             document.getElementById('btn-' + modo).classList.add('active-mode');
+        }
+
+        function setPay(metodo) {
+            document.getElementById('campos-cartao').style.display = (metodo === 'pix') ? 'none' : 'block';
+            document.getElementById('campo-pix').style.display = (metodo === 'pix') ? 'block' : 'none';
         }
 
         async function enviarComando() {
             const frase = document.getElementById('frase').value;
             const dot = document.getElementById('status-dot');
-            const modoAtual = localStorage.getItem('modoSelecionado');
+            const modo = localStorage.getItem('modoSelecionado');
 
             try {
                 const response = await fetch(webhookURL, {
                     method: 'POST',
-                    body: JSON.stringify({ mensagem: frase, modo: modoAtual }),
+                    body: JSON.stringify({ mensagem: frase, modo: modo }),
                     headers: { 'Content-Type': 'application/json' }
                 });
-
                 if (response.ok) {
                     dot.className = "dot dot-online";
-                    alert("Enviado com sucesso.");
-                } else {
-                    throw new Error();
                 }
             } catch (err) {
-                // Se o sinal cair, a bolinha fica cinza
                 dot.className = "dot dot-offline";
-                alert("Falha na conexão com o robô.");
             }
+        }
+
+        function confirmarPagamento() {
+            alert("Processando pagamento... O Johan continuará ativo.");
+            document.getElementById('alert-pagamento').style.display = 'none';
         }
     </script>
 </body>
