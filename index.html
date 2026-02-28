@@ -94,14 +94,11 @@
         <button class="btn-cancel" onclick="cancelarAssinatura()">CANCELAR CARTÃO E ASSINATURA</button>
     </div>
 
-    <script>
-       // --- REGISTRO DO PWA (O que permite instalar como App) ---
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-    .then(() => console.log("Sentinela PWA: Pronto"))
-    .catch((err) => console.log("Erro PWA:", err));
+    <script> if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(() => {
+        console.log("Johan: Sistema de instalação ativo.");
+    });
 }
-// -------------------------------------------------------- 
         const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
         window.onload = function() {
@@ -163,4 +160,5 @@ if ('serviceWorker' in navigator) {
     </script>
 </body>
 </html>
+
 
