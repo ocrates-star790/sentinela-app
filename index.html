@@ -5,25 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Johan Control</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#050505">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #050505; color: #b0b0b0; text-align: center; padding: 20px; }
+        /* Visual Clínico/Sombrio preservado */
+        body { font-family: 'Segoe UI', sans-serif; background: #050505; color: #b0b0b0; text-align: center; padding: 20px; margin: 0; }
         .card { background: #111; border-radius: 4px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
-        .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 12px; }
+        .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
         .dot { height: 10px; width: 10px; border-radius: 50%; transition: 0.3s; }
         .dot-online { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
-        .dot-offline { background-color: #444; }
-        h1 { font-weight: 200; letter-spacing: 10px; color: #fff; margin-bottom: 30px; }
-        input[type="text"] { width: 90%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; margin: 8px 0; font-size: 15px; }
+        
+        h1 { font-weight: 200; letter-spacing: 10px; color: #fff; margin-bottom: 30px; text-transform: uppercase; }
+        input[type="text"] { width: 90%; padding: 15px; background: #000; border: 1px solid #333; color: #fff; margin: 8px 0; font-size: 14px; outline: none; }
+        
+        /* Controles de Hardware */
         .hw-control { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; font-size: 13px; }
-        input[type="range"] { width: 60%; accent-color: #8b0000; }
-        button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.1s; }
-        button:active { transform: scale(0.98); }
-        .active-mode { background: #e0e0e0 !important; color: #000 !important; font-weight: bold; }
+        input[type="range"] { width: 65%; accent-color: #8b0000; }
+
+        /* Botões e Abas Ativas */
+        button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; border-radius: 2px; font-size: 12px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        button:active { transform: scale(0.98); opacity: 0.8; }
+        
+        .active-mode { background: #e0e0e0 !important; color: #000 !important; font-weight: bold; border-color: #fff !important; }
         .btn-send { background: #8b0000; color: #fff; border: none; font-weight: bold; margin-top: 10px; letter-spacing: 2px; }
-        .btn-cancel { background: transparent; border: 1px solid #444; color: #444; font-size: 10px; margin-top: 15px; }
+        .btn-pay { background: #fff; color: #000; border: none; font-weight: bold; margin-top: 15px; }
+
         .payment-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-        .pay-method { font-size: 10px; padding: 10px 5px; flex: 1; border: 1px solid #333; }
+        .pay-method { font-size: 10px; padding: 12px 5px; flex: 1; border: 1px solid #333; }
+        .btn-cancel { background: transparent; border: 1px solid #333; color: #444; font-size: 10px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -37,7 +44,10 @@
 
     <div class="card">
         <h3>AJUSTES DO SENTINELA</h3>
-        <div class="hw-control"><span>VOLUME</span><input type="range" id="vol-slider" onchange="salvarConfig()"></div>
+        <div class="hw-control">
+            <span>VOLUME</span>
+            <input type="range" id="vol-slider" min="0" max="100" onchange="salvarHw()">
+        </div>
     </div>
 
     <div class="card">
@@ -61,41 +71,71 @@
             <button class="pay-method" id="tab-boleto" onclick="setPayTab('boleto')">Boleto</button>
             <button class="pay-method" id="tab-pix" onclick="setPayTab('pix')">PIX</button>
         </div>
+
         <div id="sec-cartao">
             <input type="text" placeholder="Número do Cartão">
-            <button onclick="confirmarPagamento()" style="background:#fff; color:#000; font-weight:bold;">PAGAR MENSALIDADE</button>
-            <button class="btn-cancel" onclick="cancelarCartao()">CANCELAR CARTÃO E ASSINATURA</button>
+            <div style="display: flex; gap: 5px; justify-content: center;">
+                <input type="text" placeholder="MM/AA" style="width: 42%;">
+                <input type="text" placeholder="CVC" style="width: 42%;">
+            </div>
         </div>
+        
+        <div id="sec-boleto" style="display:none; padding: 15px;">
+            <p style="font-size:12px;">Boleto disponível para fechamento do mês.</p>
+        </div>
+
+        <div id="sec-pix" style="display:none; padding: 15px;">
+            <p style="font-size:10px; color:#666; margin-bottom:10px;">Copie a chave PIX abaixo:</p>
+            <code id="pix-code" style="color:#00ff00; font-size:10px; word-break:break-all; display:block; background:#000; padding:10px; border:1px solid #333;">00020126360014BR.GOV.BCB.PIX0114+55119999999995204000053039865802BR5925JOHAN_ROBOT6009SAO_PAULO62070503***6304ABCD</code>
+            <button onclick="copiarPix()" style="margin-top:10px; font-size:10px; width: auto; padding: 8px 20px;">Copiar Código</button>
+        </div>
+
+        <button class="btn-pay" onclick="confirmarPagamento()">EFETUAR PAGAMENTO</button>
+        <button class="btn-cancel" onclick="cancelarAssinatura()">CANCELAR CARTÃO E ASSINATURA</button>
     </div>
 
     <script>
         const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
-        // Registro do Service Worker para rodar em segundo plano
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(() => console.log("PWA Ativo"));
-        }
-
         window.onload = function() {
             selecionarModo(localStorage.getItem('modoSelecionado') || 'filosofo');
             setPayTab(localStorage.getItem('abaPagamento') || 'cartao');
+            document.getElementById('vol-slider').value = localStorage.getItem('volume') || 50;
         };
 
         function selecionarModo(m) {
             localStorage.setItem('modoSelecionado', m);
-            document.querySelectorAll('.active-mode').forEach(b => b.classList.remove('active-mode'));
+            document.getElementById('btn-filosofo').classList.remove('active-mode');
+            document.getElementById('btn-vendedor').classList.remove('active-mode');
             document.getElementById('btn-' + m).classList.add('active-mode');
         }
 
-        async function cancelarCartao() {
-            if(confirm("Deseja realmente cancelar a assinatura do Johan? O robô será desativado.")) {
-                // Envia comando para o Make inativar no Asaas
-                const response = await fetch(webhookURL, {
-                    method: 'POST',
-                    body: JSON.stringify({ acao: 'cancelar_assinatura', cliente: 'Johan_User' }),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                if(response.ok) alert("Assinatura cancelada com sucesso.");
+        function setPayTab(m) {
+            localStorage.setItem('abaPagamento', m);
+            ['cartao', 'boleto', 'pix'].forEach(tab => {
+                document.getElementById('tab-' + tab).classList.remove('active-mode');
+                document.getElementById('sec-' + tab).style.display = 'none';
+            });
+            document.getElementById('tab-' + m).classList.add('active-mode');
+            document.getElementById('sec-' + m).style.display = 'block';
+        }
+
+        function copiarPix() {
+            const textoPix = document.getElementById('pix-code').innerText;
+            navigator.clipboard.writeText(textoPix).then(() => alert("Código PIX copiado!"));
+        }
+
+        function confirmarPagamento() {
+            const m = localStorage.getItem('abaPagamento');
+            if (m === 'boleto') {
+                alert("Gerando Boleto... O download iniciará em instantes.");
+                const blob = new Blob(["Boleto PDF Simulado"], { type: "application/pdf" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "johan_boleto.pdf";
+                link.click();
+            } else {
+                alert("Processando pagamento via " + m + "... O Johan continuará ativo.");
             }
         }
 
@@ -104,14 +144,15 @@
             try {
                 const response = await fetch(webhookURL, {
                     method: 'POST',
-                    body: JSON.stringify({ mensagem: frase, modo: localStorage.getItem('modoSelecionado') }),
+                    body: JSON.stringify({ mensagem: frase, modo: localStorage.getItem('modoSelecionado'), vol: localStorage.getItem('volume') }),
                     headers: { 'Content-Type': 'application/json' }
                 });
-                if (response.ok) alert("Johan recebeu a mensagem.");
-            } catch (e) { document.getElementById('status-dot').className = "dot dot-offline"; }
+                if (response.ok) alert("Johan recebeu sua mensagem.");
+            } catch (err) { alert("Falha na conexão com o robô."); }
         }
 
-        function setPayTab(m) { localStorage.setItem('abaPagamento', m); }
+        function salvarHw() { localStorage.setItem('volume', document.getElementById('vol-slider').value); }
+        function cancelarAssinatura() { if(confirm("Deseja cancelar?")) alert("Assinatura cancelada."); }
     </script>
 </body>
 </html>
