@@ -4,44 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Johan Control</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#050505">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #050505; color: #b0b0b0; text-align: center; padding: 20px; }
         .card { background: #111; border-radius: 4px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
-        
-        /* Status */
-        .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 13px; letter-spacing: 1px; }
+        .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 12px; }
         .dot { height: 10px; width: 10px; border-radius: 50%; transition: 0.3s; }
         .dot-online { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
         .dot-offline { background-color: #444; }
-
         h1 { font-weight: 200; letter-spacing: 10px; color: #fff; margin-bottom: 30px; }
-        input, select { width: 90%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 2px; margin: 8px 0; font-size: 15px; }
-        
-        /* Botões com efeito de clique */
-        button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; border-radius: 2px; font-size: 13px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.1s; }
-        button:active { transform: scale(0.98); background: #252525; opacity: 0.8; } /* Feedback de clique */
-        
-        .active-mode { background: #e0e0e0 !important; color: #000 !important; font-weight: bold; border-color: #fff !important; }
+        input[type="text"] { width: 90%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; margin: 8px 0; font-size: 15px; }
+        .hw-control { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; font-size: 13px; }
+        input[type="range"] { width: 60%; accent-color: #8b0000; }
+        button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.1s; }
+        button:active { transform: scale(0.98); }
+        .active-mode { background: #e0e0e0 !important; color: #000 !important; font-weight: bold; }
         .btn-send { background: #8b0000; color: #fff; border: none; font-weight: bold; margin-top: 10px; letter-spacing: 2px; }
-
-        .pay-alert { background: #8b0000; color: #fff; padding: 10px; font-size: 11px; font-weight: bold; margin-bottom: 20px; display: none; }
+        .btn-cancel { background: transparent; border: 1px solid #444; color: #444; font-size: 10px; margin-top: 15px; }
         .payment-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
         .pay-method { font-size: 10px; padding: 10px 5px; flex: 1; border: 1px solid #333; }
-        .card-type-selector { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; font-size: 12px; color: #fff; }
     </style>
 </head>
 <body>
     <h1>JOHAN</h1>
 
-    <div id="alert-pagamento" class="pay-alert">
-        AVISO: MÊS ENCERRADO OU PRÓXIMO AO VENCIMENTO. EFETUE O PAGAMENTO.
-    </div>
-    
     <div class="card">
         <div class="status-area">
-            <span id="status-dot" class="dot dot-online"></span>
-            PAINEL DO ROBÔ
+            <span id="status-dot" class="dot dot-online"></span> PAINEL DO ROBÔ
         </div>
+    </div>
+
+    <div class="card">
+        <h3>AJUSTES DO SENTINELA</h3>
+        <div class="hw-control"><span>VOLUME</span><input type="range" id="vol-slider" onchange="salvarConfig()"></div>
     </div>
 
     <div class="card">
@@ -65,106 +61,57 @@
             <button class="pay-method" id="tab-boleto" onclick="setPayTab('boleto')">Boleto</button>
             <button class="pay-method" id="tab-pix" onclick="setPayTab('pix')">PIX</button>
         </div>
-
         <div id="sec-cartao">
-            <div class="card-type-selector">
-                <label><input type="radio" name="cardtype" checked> Crédito</label>
-                <label><input type="radio" name="cardtype"> Débito</label>
-            </div>
             <input type="text" placeholder="Número do Cartão">
-            <div style="display: flex; gap: 5px;">
-                <input type="text" placeholder="MM/AA" style="width: 45%;">
-                <input type="text" placeholder="CVC" style="width: 45%;">
-            </div>
+            <button onclick="confirmarPagamento()" style="background:#fff; color:#000; font-weight:bold;">PAGAR MENSALIDADE</button>
+            <button class="btn-cancel" onclick="cancelarCartao()">CANCELAR CARTÃO E ASSINATURA</button>
         </div>
-        
-        <div id="sec-boleto" style="display:none; padding: 10px;">
-            <p style="font-size:12px;">Boleto gerado para o próximo vencimento.</p>
-            <button onclick="baixarBoleto()" style="background:#333; color:#fff;">Baixar PDF</button>
-        </div>
-
-        <div id="sec-pix" style="display:none; padding: 10px;">
-            <code id="pix-code" style="color:#00ff00; font-size:10px; word-break:break-all;">00020126360014BR.GOV.BCB.PIX0114+55119999999995204000053039865802BR5925JOHAN_ROBOT6009SAO_PAULO62070503***6304ABCD</code>
-            <button onclick="copiarPix()" style="margin-top:10px; font-size:10px;">Copiar Código PIX</button>
-        </div>
-
-        <button onclick="confirmarPagamento()" style="background:#fff; color:#000; border:none; margin-top:15px; font-weight:bold;">EFETUAR PAGAMENTO</button>
     </div>
 
     <script>
         const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
-        window.onload = function() {
-            const modoSalvo = localStorage.getItem('modoSelecionado') || 'filosofo';
-            selecionarModo(modoSalvo);
-            const abaSalva = localStorage.getItem('abaPagamento') || 'cartao';
-            setPayTab(abaSalva);
-
-            const hoje = new Date();
-            if (hoje.getDate() >= 25) {
-                document.getElementById('alert-pagamento').style.display = 'block';
-            }
-        };
-
-        function selecionarModo(modo) {
-            localStorage.setItem('modoSelecionado', modo);
-            document.getElementById('btn-filosofo').classList.remove('active-mode');
-            document.getElementById('btn-vendedor').classList.remove('active-mode');
-            document.getElementById('btn-' + modo).classList.add('active-mode');
+        // Registro do Service Worker para rodar em segundo plano
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => console.log("PWA Ativo"));
         }
 
-        function setPayTab(metodo) {
-            localStorage.setItem('abaPagamento', metodo);
-            ['cartao', 'boleto', 'pix'].forEach(m => {
-                document.getElementById('tab-' + m).classList.remove('active-mode');
-                document.getElementById('sec-' + m).style.display = 'none';
-            });
-            document.getElementById('tab-' + metodo).classList.add('active-mode');
-            document.getElementById('sec-' + metodo).style.display = 'block';
+        window.onload = function() {
+            selecionarModo(localStorage.getItem('modoSelecionado') || 'filosofo');
+            setPayTab(localStorage.getItem('abaPagamento') || 'cartao');
+        };
+
+        function selecionarModo(m) {
+            localStorage.setItem('modoSelecionado', m);
+            document.querySelectorAll('.active-mode').forEach(b => b.classList.remove('active-mode'));
+            document.getElementById('btn-' + m).classList.add('active-mode');
+        }
+
+        async function cancelarCartao() {
+            if(confirm("Deseja realmente cancelar a assinatura do Johan? O robô será desativado.")) {
+                // Envia comando para o Make inativar no Asaas
+                const response = await fetch(webhookURL, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: 'cancelar_assinatura', cliente: 'Johan_User' }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if(response.ok) alert("Assinatura cancelada com sucesso.");
+            }
         }
 
         async function enviarComando() {
             const frase = document.getElementById('frase').value;
-            const dot = document.getElementById('status-dot');
-            const modo = localStorage.getItem('modoSelecionado');
-
             try {
                 const response = await fetch(webhookURL, {
                     method: 'POST',
-                    body: JSON.stringify({ mensagem: frase, modo: modo }),
+                    body: JSON.stringify({ mensagem: frase, modo: localStorage.getItem('modoSelecionado') }),
                     headers: { 'Content-Type': 'application/json' }
                 });
-                if (response.ok) { 
-                    dot.className = "dot dot-online";
-                    alert("Johan recebeu sua mensagem."); // Mensagem de volta
-                }
-            } catch (err) { 
-                dot.className = "dot dot-offline";
-                alert("Falha na conexão.");
-            }
+                if (response.ok) alert("Johan recebeu a mensagem.");
+            } catch (e) { document.getElementById('status-dot').className = "dot dot-offline"; }
         }
 
-        function copiarPix() {
-            const textoPix = document.getElementById('pix-code').innerText;
-            navigator.clipboard.writeText(textoPix).then(() => {
-                alert("Código PIX copiado!");
-            });
-        }
-
-        function baixarBoleto() {
-            alert("Preparando download do PDF... (Em produção, o arquivo será baixado aqui)");
-            // Simulação de download
-            const blob = new Blob(["Boleto Placeholder"], { type: "application/pdf" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "boleto_johan.pdf";
-            link.click();
-        }
-
-        function confirmarPagamento() {
-            alert("Pagamento processado com sucesso.");
-            document.getElementById('alert-pagamento').style.display = 'none';
-        }
+        function setPayTab(m) { localStorage.setItem('abaPagamento', m); }
     </script>
 </body>
 </html>
