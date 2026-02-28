@@ -95,6 +95,13 @@
     </div>
 
     <script>
+       // --- REGISTRO DO PWA (O que permite instalar como App) ---
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+    .then(() => console.log("Sentinela PWA: Pronto"))
+    .catch((err) => console.log("Erro PWA:", err));
+}
+// -------------------------------------------------------- 
         const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
         window.onload = function() {
@@ -156,3 +163,4 @@
     </script>
 </body>
 </html>
+
