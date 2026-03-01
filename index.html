@@ -10,12 +10,13 @@
         body { font-family: 'Segoe UI', sans-serif; background: #050505; color: #b0b0b0; text-align: center; padding: 20px; margin: 0; }
         .card { background: #111; border-radius: 4px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
         
-        /* Botão de Instalação Especial */
-        #install-button { 
-            display: none; /* Escondido por padrão */
+        /* Área de Instalação */
+        #install-area { display: none; margin-bottom: 20px; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn-install-custom { 
             background: #fff; color: #000; font-weight: bold; border: none; 
-            padding: 15px; margin-bottom: 20px; letter-spacing: 2px;
-            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+            padding: 12px 20px; border-radius: 4px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; font-size: 11px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2); text-transform: uppercase;
         }
 
         .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
@@ -29,21 +30,25 @@
         input[type="range"] { width: 60%; accent-color: #8b0000; }
 
         button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; border-radius: 2px; font-size: 12px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
-        button:active { transform: scale(0.98); opacity: 0.8; }
-        
         .active-mode { background: #e0e0e0 !important; color: #000 !important; font-weight: bold; border-color: #fff !important; }
         .btn-send { background: #8b0000; color: #fff; border: none; font-weight: bold; margin-top: 10px; letter-spacing: 2px; }
         .btn-pay { background: #fff; color: #000; border: none; font-weight: bold; margin-top: 15px; }
 
         .payment-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
         .pay-method { font-size: 10px; padding: 12px 5px; flex: 1; border: 1px solid #333; }
-        .btn-cancel { background: transparent; border: 1px solid #333; color: #444; font-size: 10px; margin-top: 15px; }
     </style>
 </head>
 <body>
     <h1>JOHAN</h1>
 
-    <button id="install-button">INSTALAR APP JOHAN</button>
+    <div id="install-area">
+        <button class="btn-install-custom" id="btn-install-mobile">
+            📱 INSTALAR NO CELULAR
+        </button>
+        <button class="btn-install-custom" id="btn-install-pc">
+            💻 INSTALAR NO COMPUTADOR
+        </button>
+    </div>
 
     <div class="card">
         <div class="status-area">
@@ -99,34 +104,46 @@
         </div>
 
         <button class="btn-pay" onclick="confirmarPagamento()">EFETUAR PAGAMENTO</button>
-        <button class="btn-cancel" onclick="cancelarAssinatura()">CANCELAR CARTÃO E ASSINATURA</button>
+        <button style="background:transparent; border:1px solid #333; color:#444; font-size:10px; margin-top:15px;" onclick="if(confirm('Cancelar?')) alert('Assinatura cancelada.')">CANCELAR ASSINATURA</button>
     </div>
 
     <script>
-        // Lógica de Instalação (PWA)
         let deferredPrompt;
-        const installBtn = document.getElementById('install-button');
+        const installArea = document.getElementById('install-area');
+        const btnMobile = document.getElementById('btn-install-mobile');
+        const btnPc = document.getElementById('btn-install-pc');
 
+        // Captura o evento de instalação
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installBtn.style.display = 'block'; // Mostra o botão [Pedido do usuário]
+            installArea.style.display = 'flex'; // Mostra os ícones [Pedido do usuário]
+            
+            // Lógica simples para destacar o botão correto
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                btnPc.style.display = 'none';
+            } else {
+                btnMobile.style.display = 'none';
+            }
         });
 
-        installBtn.addEventListener('click', async () => {
+        async function triggerInstall() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
-                    installBtn.style.display = 'none'; // Some após instalar [Pedido do usuário]
+                    installArea.style.display = 'none'; // Some após instalar [Pedido do usuário]
                 }
                 deferredPrompt = null;
             }
-        });
+        }
 
-        // Se já estiver rodando como app, esconde o botão
+        btnMobile.addEventListener('click', triggerInstall);
+        btnPc.addEventListener('click', triggerInstall);
+
+        // Se já for app instalado, oculta tudo
         if (window.matchMedia('(display-mode: standalone)').matches) {
-            installBtn.style.display = 'none';
+            installArea.style.display = 'none';
         }
 
         if ('serviceWorker' in navigator) {
@@ -167,7 +184,7 @@
         async function enviarComando() {
             const inputFrase = document.getElementById('frase');
             const frase = inputFrase.value.trim();
-            if (!frase) return; // Não envia se estiver vazio [Pedido do usuário]
+            if (!frase) return;
 
             try {
                 const response = await fetch(webhookURL, {
@@ -177,7 +194,7 @@
                 });
                 if (response.ok) {
                     alert("Johan recebeu sua mensagem.");
-                    inputFrase.value = ""; // Limpa após enviar [Pedido do usuário]
+                    inputFrase.value = "";
                 }
             } catch (err) { alert("Falha na conexão."); }
         }
@@ -185,7 +202,6 @@
         function salvarHw() { localStorage.setItem('volume', document.getElementById('vol-slider').value); }
         function copiarPix() { navigator.clipboard.writeText(document.getElementById('pix-code').innerText).then(() => alert("Copiado!")); }
         function confirmarPagamento() { alert("Processando..."); }
-        function cancelarAssinatura() { if(confirm("Deseja cancelar?")) alert("Assinatura cancelada."); }
     </script>
 </body>
 </html>
