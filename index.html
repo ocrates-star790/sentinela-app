@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Johan Control</title>
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#050505">
     <style>
-        /* Visual Clínico/Sombrio preservado */
         body { font-family: 'Segoe UI', sans-serif; background: #050505; color: #b0b0b0; text-align: center; padding: 20px; margin: 0; }
         .card { background: #111; border-radius: 4px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
         .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
@@ -14,13 +14,12 @@
         .dot-online { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
         
         h1 { font-weight: 200; letter-spacing: 10px; color: #fff; margin-bottom: 30px; text-transform: uppercase; }
-        input[type="text"] { width: 90%; padding: 15px; background: #000; border: 1px solid #333; color: #fff; margin: 8px 0; font-size: 14px; outline: none; }
+        input[type="text"] { width: 90%; padding: 15px; background: #000; border: 1px solid #333; color: #fff; margin: 8px 0; font-size: 14px; outline: none; transition: 0.3s; }
+        input[type="text"]:focus { border-color: #8b0000; }
         
-        /* Controles de Hardware */
         .hw-control { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; font-size: 13px; }
-        input[type="range"] { width: 65%; accent-color: #8b0000; }
+        input[type="range"] { width: 60%; accent-color: #8b0000; }
 
-        /* Botões e Abas Ativas */
         button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; border-radius: 2px; font-size: 12px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         button:active { transform: scale(0.98); opacity: 0.8; }
         
@@ -45,8 +44,8 @@
     <div class="card">
         <h3>AJUSTES DO SENTINELA</h3>
         <div class="hw-control">
-            <span>VOLUME</span>
-            <input type="range" id="vol-slider" min="0" max="100" onchange="salvarHw()">
+            <span>VOLUME: <b id="vol-perc">50</b>%</span>
+            <input type="range" id="vol-slider" min="0" max="100" oninput="updateVolDisplay()" onchange="salvarHw()">
         </div>
     </div>
 
@@ -85,7 +84,6 @@
         </div>
 
         <div id="sec-pix" style="display:none; padding: 15px;">
-            <p style="font-size:10px; color:#666; margin-bottom:10px;">Copie a chave PIX abaixo:</p>
             <code id="pix-code" style="color:#00ff00; font-size:10px; word-break:break-all; display:block; background:#000; padding:10px; border:1px solid #333;">00020126360014BR.GOV.BCB.PIX0114+55119999999995204000053039865802BR5925JOHAN_ROBOT6009SAO_PAULO62070503***6304ABCD</code>
             <button onclick="copiarPix()" style="margin-top:10px; font-size:10px; width: auto; padding: 8px 20px;">Copiar Código</button>
         </div>
@@ -94,18 +92,25 @@
         <button class="btn-cancel" onclick="cancelarAssinatura()">CANCELAR CARTÃO E ASSINATURA</button>
     </div>
 
-    <script> if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(() => {
-        console.log("Johan: Sistema de instalação ativo.");
-    });
-}
+    <script>
+        // Registro do Service Worker para instalação como App
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => console.log("PWA Ativo"));
+        }
+
         const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
         window.onload = function() {
             selecionarModo(localStorage.getItem('modoSelecionado') || 'filosofo');
             setPayTab(localStorage.getItem('abaPagamento') || 'cartao');
-            document.getElementById('vol-slider').value = localStorage.getItem('volume') || 50;
+            const vol = localStorage.getItem('volume') || 50;
+            document.getElementById('vol-slider').value = vol;
+            document.getElementById('vol-perc').innerText = vol;
         };
+
+        function updateVolDisplay() {
+            document.getElementById('vol-perc').innerText = document.getElementById('vol-slider').value;
+        }
 
         function selecionarModo(m) {
             localStorage.setItem('modoSelecionado', m);
@@ -124,35 +129,47 @@
             document.getElementById('sec-' + m).style.display = 'block';
         }
 
+        async function enviarComando() {
+            const inputFrase = document.getElementById('frase');
+            const frase = inputFrase.value.trim();
+            
+            // Se estiver vazio, não faz nada e não avisa [Pedido do usuário]
+            if (!frase) return;
+
+            try {
+                const response = await fetch(webhookURL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        mensagem: frase, 
+                        modo: localStorage.getItem('modoSelecionado'), 
+                        vol: localStorage.getItem('volume') 
+                    }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    alert("Johan recebeu sua mensagem.");
+                    inputFrase.value = ""; // Limpa o campo após enviar [Pedido do usuário]
+                }
+            } catch (err) { alert("Falha na conexão com o robô."); }
+        }
+
         function copiarPix() {
-            const textoPix = document.getElementById('pix-code').innerText;
-            navigator.clipboard.writeText(textoPix).then(() => alert("Código PIX copiado!"));
+            navigator.clipboard.writeText(document.getElementById('pix-code').innerText).then(() => alert("Código PIX copiado!"));
         }
 
         function confirmarPagamento() {
             const m = localStorage.getItem('abaPagamento');
             if (m === 'boleto') {
-                alert("Gerando Boleto... O download iniciará em instantes.");
+                alert("Gerando Boleto...");
                 const blob = new Blob(["Boleto PDF Simulado"], { type: "application/pdf" });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
                 link.download = "johan_boleto.pdf";
                 link.click();
             } else {
-                alert("Processando pagamento via " + m + "... O Johan continuará ativo.");
+                alert("Processando pagamento via " + m + "...");
             }
-        }
-
-        async function enviarComando() {
-            const frase = document.getElementById('frase').value;
-            try {
-                const response = await fetch(webhookURL, {
-                    method: 'POST',
-                    body: JSON.stringify({ mensagem: frase, modo: localStorage.getItem('modoSelecionado'), vol: localStorage.getItem('volume') }),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                if (response.ok) alert("Johan recebeu sua mensagem.");
-            } catch (err) { alert("Falha na conexão com o robô."); }
         }
 
         function salvarHw() { localStorage.setItem('volume', document.getElementById('vol-slider').value); }
@@ -160,5 +177,3 @@
     </script>
 </body>
 </html>
-
-
