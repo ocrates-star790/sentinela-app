@@ -9,13 +9,21 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #050505; color: #b0b0b0; text-align: center; padding: 20px; margin: 0; }
         .card { background: #111; border-radius: 4px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
+        
+        /* Botão de Instalação Especial */
+        #install-button { 
+            display: none; /* Escondido por padrão */
+            background: #fff; color: #000; font-weight: bold; border: none; 
+            padding: 15px; margin-bottom: 20px; letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+
         .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
         .dot { height: 10px; width: 10px; border-radius: 50%; transition: 0.3s; }
         .dot-online { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
         
         h1 { font-weight: 200; letter-spacing: 10px; color: #fff; margin-bottom: 30px; text-transform: uppercase; }
-        input[type="text"] { width: 90%; padding: 15px; background: #000; border: 1px solid #333; color: #fff; margin: 8px 0; font-size: 14px; outline: none; transition: 0.3s; }
-        input[type="text"]:focus { border-color: #8b0000; }
+        input[type="text"] { width: 90%; padding: 15px; background: #000; border: 1px solid #333; color: #fff; margin: 8px 0; font-size: 14px; outline: none; }
         
         .hw-control { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; font-size: 13px; }
         input[type="range"] { width: 60%; accent-color: #8b0000; }
@@ -34,6 +42,8 @@
 </head>
 <body>
     <h1>JOHAN</h1>
+
+    <button id="install-button">INSTALAR APP JOHAN</button>
 
     <div class="card">
         <div class="status-area">
@@ -84,7 +94,7 @@
         </div>
 
         <div id="sec-pix" style="display:none; padding: 15px;">
-            <code id="pix-code" style="color:#00ff00; font-size:10px; word-break:break-all; display:block; background:#000; padding:10px; border:1px solid #333;">00020126360014BR.GOV.BCB.PIX0114+55119999999995204000053039865802BR5925JOHAN_ROBOT6009SAO_PAULO62070503***6304ABCD</code>
+            <code id="pix-code" style="color:#00ff00; font-size:10px; word-break:break-all; display:block; background:#000; padding:10px; border:1px solid #333;">00020126360014BR.GOV.BCB.PIX...</code>
             <button onclick="copiarPix()" style="margin-top:10px; font-size:10px; width: auto; padding: 8px 20px;">Copiar Código</button>
         </div>
 
@@ -93,9 +103,34 @@
     </div>
 
     <script>
-        // Registro do Service Worker para instalação como App
+        // Lógica de Instalação (PWA)
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-button');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block'; // Mostra o botão [Pedido do usuário]
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBtn.style.display = 'none'; // Some após instalar [Pedido do usuário]
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // Se já estiver rodando como app, esconde o botão
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            installBtn.style.display = 'none';
+        }
+
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(() => console.log("PWA Ativo"));
+            navigator.serviceWorker.register('sw.js');
         }
 
         const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
@@ -132,47 +167,24 @@
         async function enviarComando() {
             const inputFrase = document.getElementById('frase');
             const frase = inputFrase.value.trim();
-            
-            // Se estiver vazio, não faz nada e não avisa [Pedido do usuário]
-            if (!frase) return;
+            if (!frase) return; // Não envia se estiver vazio [Pedido do usuário]
 
             try {
                 const response = await fetch(webhookURL, {
                     method: 'POST',
-                    body: JSON.stringify({ 
-                        mensagem: frase, 
-                        modo: localStorage.getItem('modoSelecionado'), 
-                        vol: localStorage.getItem('volume') 
-                    }),
+                    body: JSON.stringify({ mensagem: frase, modo: localStorage.getItem('modoSelecionado'), vol: localStorage.getItem('volume') }),
                     headers: { 'Content-Type': 'application/json' }
                 });
-                
                 if (response.ok) {
                     alert("Johan recebeu sua mensagem.");
-                    inputFrase.value = ""; // Limpa o campo após enviar [Pedido do usuário]
+                    inputFrase.value = ""; // Limpa após enviar [Pedido do usuário]
                 }
-            } catch (err) { alert("Falha na conexão com o robô."); }
-        }
-
-        function copiarPix() {
-            navigator.clipboard.writeText(document.getElementById('pix-code').innerText).then(() => alert("Código PIX copiado!"));
-        }
-
-        function confirmarPagamento() {
-            const m = localStorage.getItem('abaPagamento');
-            if (m === 'boleto') {
-                alert("Gerando Boleto...");
-                const blob = new Blob(["Boleto PDF Simulado"], { type: "application/pdf" });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = "johan_boleto.pdf";
-                link.click();
-            } else {
-                alert("Processando pagamento via " + m + "...");
-            }
+            } catch (err) { alert("Falha na conexão."); }
         }
 
         function salvarHw() { localStorage.setItem('volume', document.getElementById('vol-slider').value); }
+        function copiarPix() { navigator.clipboard.writeText(document.getElementById('pix-code').innerText).then(() => alert("Copiado!")); }
+        function confirmarPagamento() { alert("Processando..."); }
         function cancelarAssinatura() { if(confirm("Deseja cancelar?")) alert("Assinatura cancelada."); }
     </script>
 </body>
