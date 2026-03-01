@@ -7,52 +7,76 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #050505; color: #b0b0b0; text-align: center; padding: 20px; margin: 0; }
-        .card { background: #111; border-radius: 4px; padding: 20px; margin-bottom: 20px; border: 1px solid #222; }
+        /* Estética Clínica e Sombria */
+        body { font-family: 'Segoe UI', sans-serif; background: #050505; color: #b0b0b0; text-align: center; margin: 0; padding-top: 70px; padding-bottom: 20px; overflow-x: hidden; }
         
-        /* Área de Instalação */
-        #install-area { display: none; margin-bottom: 20px; gap: 10px; justify-content: center; flex-wrap: wrap; }
-        .btn-install-custom { 
-            background: #fff; color: #000; font-weight: bold; border: none; 
-            padding: 12px 20px; border-radius: 4px; cursor: pointer;
-            display: flex; align-items: center; gap: 8px; font-size: 11px;
-            box-shadow: 0 0 15px rgba(255,255,255,0.2); text-transform: uppercase;
-        }
+        /* Barra de Menu Superior */
+        header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: #111; border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-sizing: border-box; z-index: 1000; }
+        header h1 { font-size: 18px; font-weight: 200; letter-spacing: 5px; color: #fff; margin: 0; }
+        
+        .icon-btn { background: none; border: none; color: #fff; cursor: pointer; padding: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; width: auto; margin: 0; }
+        .icon-btn:active { transform: scale(0.9); opacity: 0.5; }
 
-        .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
-        .dot { height: 10px; width: 10px; border-radius: 50%; transition: 0.3s; }
-        .dot-online { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
+        /* Menu Lateral (Drawer) */
+        #side-menu { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: #111; border-left: 1px solid #222; z-index: 1100; transition: 0.3s ease; padding: 20px; box-sizing: border-box; text-align: left; }
+        #side-menu.open { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
+        #menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 1050; }
+
+        /* Estilos de Card e Componentes */
+        .card { background: #111; border-radius: 4px; padding: 20px; margin: 0 15px 20px 15px; border: 1px solid #222; }
+        .status-area { display: flex; align-items: center; justify-content: center; gap: 10px; color: #888; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+        .dot { height: 8px; width: 8px; border-radius: 50%; background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
         
-        h1 { font-weight: 200; letter-spacing: 10px; color: #fff; margin-bottom: 30px; text-transform: uppercase; }
-        input[type="text"] { width: 90%; padding: 15px; background: #000; border: 1px solid #333; color: #fff; margin: 8px 0; font-size: 14px; outline: none; }
-        
+        input[type="text"], input[type="url"] { width: 90%; padding: 15px; background: #000; border: 1px solid #333; color: #fff; margin: 8px 0; font-size: 14px; outline: none; }
         .hw-control { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; font-size: 13px; }
         input[type="range"] { width: 60%; accent-color: #8b0000; }
 
         button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 14px; border-radius: 2px; font-size: 12px; width: 100%; margin: 5px 0; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
-        .active-mode { background: #e0e0e0 !important; color: #000 !important; font-weight: bold; border-color: #fff !important; }
+        .active-mode { background: #e0e0e0 !important; color: #000 !important; font-weight: bold; }
         .btn-send { background: #8b0000; color: #fff; border: none; font-weight: bold; margin-top: 10px; letter-spacing: 2px; }
         .btn-pay { background: #fff; color: #000; border: none; font-weight: bold; margin-top: 15px; }
 
         .payment-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
         .pay-method { font-size: 10px; padding: 12px 5px; flex: 1; border: 1px solid #333; }
+
+        /* Área de Instalação Móvel */
+        #install-area { display: none; margin: 0 15px 20px 15px; gap: 10px; justify-content: center; }
     </style>
 </head>
 <body>
-    <h1>JOHAN</h1>
+
+    <header>
+        <button class="icon-btn" onclick="location.reload()" title="Atualizar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+        <h1>JOHAN</h1>
+        <button class="icon-btn" onclick="toggleMenu()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+    </header>
+
+    <div id="menu-overlay" onclick="toggleMenu()"></div>
+    <div id="side-menu">
+        <h2 style="color:#fff; font-weight:200;">CONFIGURAÇÕES</h2>
+        <hr style="border:0; border-top:1px solid #222; margin:20px 0;">
+        <label style="font-size:10px; color:#555;">WEBHOOK URL</label>
+        <input type="url" id="config-webhook" placeholder="https://hook.make.com/..." onchange="saveConfig()">
+        
+        <p style="font-size:10px; color:#444; margin-top:30px;">
+            JOHAN SENTINELA v2.0<br>
+            Hardware: ESP32-S3 N16R8<br>
+            Status: Licença Ativa
+        </p>
+        <button onclick="toggleMenu()" style="margin-top:20px; border-color:#8b0000; color:#8b0000;">Fechar</button>
+    </div>
 
     <div id="install-area">
-        <button class="btn-install-custom" id="btn-install-mobile">
-            📱 INSTALAR NO CELULAR
-        </button>
-        <button class="btn-install-custom" id="btn-install-pc">
-            💻 INSTALAR NO COMPUTADOR
-        </button>
+        <button onclick="triggerInstall()" style="background:#fff; color:#000; font-weight:bold;">Instalar App Johan</button>
     </div>
 
     <div class="card">
         <div class="status-area">
-            <span id="status-dot" class="dot dot-online"></span> PAINEL DO ROBÔ
+            <span class="dot"></span> PAINEL DO ROBÔ
         </div>
     </div>
 
@@ -104,55 +128,49 @@
         </div>
 
         <button class="btn-pay" onclick="confirmarPagamento()">EFETUAR PAGAMENTO</button>
-        <button style="background:transparent; border:1px solid #333; color:#444; font-size:10px; margin-top:15px;" onclick="if(confirm('Cancelar?')) alert('Assinatura cancelada.')">CANCELAR ASSINATURA</button>
     </div>
 
     <script>
         let deferredPrompt;
-        const installArea = document.getElementById('install-area');
-        const btnMobile = document.getElementById('btn-install-mobile');
-        const btnPc = document.getElementById('btn-install-pc');
+        const defaultWebhook = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
-        // Captura o evento de instalação
+        // Registro PWA e Instalação
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installArea.style.display = 'flex'; // Mostra os ícones [Pedido do usuário]
-            
-            // Lógica simples para destacar o botão correto
-            if (/Mobi|Android/i.test(navigator.userAgent)) {
-                btnPc.style.display = 'none';
-            } else {
-                btnMobile.style.display = 'none';
-            }
+            document.getElementById('install-area').style.display = 'flex';
         });
 
         async function triggerInstall() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    installArea.style.display = 'none'; // Some após instalar [Pedido do usuário]
-                }
+                if (outcome === 'accepted') document.getElementById('install-area').style.display = 'none';
                 deferredPrompt = null;
             }
         }
 
-        btnMobile.addEventListener('click', triggerInstall);
-        btnPc.addEventListener('click', triggerInstall);
-
-        // Se já for app instalado, oculta tudo
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-            installArea.style.display = 'none';
+        // Funções de Interface
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('menu-overlay');
+            const isOpen = menu.classList.contains('open');
+            menu.classList.toggle('open');
+            overlay.style.display = isOpen ? 'none' : 'block';
         }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+        function saveConfig() {
+            const url = document.getElementById('config-webhook').value;
+            localStorage.setItem('customWebhook', url);
+            alert("Configurações salvas.");
         }
-
-        const webhookURL = "https://hook.us2.make.com/z9ug682jka8xfl9ldrnez8tnmi3apoxc";
 
         window.onload = function() {
+            // Carregar Webhook
+            document.getElementById('config-webhook').value = localStorage.getItem('customWebhook') || defaultWebhook;
+            
             selecionarModo(localStorage.getItem('modoSelecionado') || 'filosofo');
             setPayTab(localStorage.getItem('abaPagamento') || 'cartao');
             const vol = localStorage.getItem('volume') || 50;
@@ -160,9 +178,7 @@
             document.getElementById('vol-perc').innerText = vol;
         };
 
-        function updateVolDisplay() {
-            document.getElementById('vol-perc').innerText = document.getElementById('vol-slider').value;
-        }
+        function updateVolDisplay() { document.getElementById('vol-perc').innerText = document.getElementById('vol-slider').value; }
 
         function selecionarModo(m) {
             localStorage.setItem('modoSelecionado', m);
@@ -186,8 +202,10 @@
             const frase = inputFrase.value.trim();
             if (!frase) return;
 
+            const currentWebhook = localStorage.getItem('customWebhook') || defaultWebhook;
+
             try {
-                const response = await fetch(webhookURL, {
+                const response = await fetch(currentWebhook, {
                     method: 'POST',
                     body: JSON.stringify({ mensagem: frase, modo: localStorage.getItem('modoSelecionado'), vol: localStorage.getItem('volume') }),
                     headers: { 'Content-Type': 'application/json' }
